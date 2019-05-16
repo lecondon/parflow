@@ -152,6 +152,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   double      *x_sl_dat, *y_sl_dat, *mann_dat;
   double      *obf_dat;
   double q_overlnd;
+  double Press_x, Press_y, Sf_x, Sf_y;
   double sep;          // scaling difference temp var @RMM
 
   Vector      *porosity = ProblemDataPorosity(problem_data);
@@ -646,6 +647,20 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
       y_dir_g = Mean(gravity * sin(atan(y_ssl_dat[io])), gravity * sin(atan(y_ssl_dat[io + sy_p])));
       y_dir_g_c = Mean(gravity * cos(atan(y_ssl_dat[io])), gravity * cos(atan(y_ssl_dat[io + sy_p])));
 
+
+// direct upwinding, no averaging with sines
+x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
+x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
+y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
+y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+
+
+// direct upwinding, no averaging no sines
+x_dir_g =  x_ssl_dat[io];
+x_dir_g_c = 1.0;
+y_dir_g = y_ssl_dat[io];
+y_dir_g_c = 1.0;
+
       z_dir_g = 1.0;
 
       del_x_slope = 1.0;
@@ -860,6 +875,13 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
 
             del_x_slope = 1.0;
             del_y_slope = 1.0;
+
+            // direct upwinding, no averaging, I think this is the correct
+            // slope to grab
+            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 
 
             /* Don't currently do upstream weighting on boundaries */
@@ -1078,6 +1100,12 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
 
             del_x_slope = 1.0;
             del_y_slope = 1.0;
+            // direct upwinding, no averaging, I think this is the correct
+            // slope to grab
+            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 
             if (fdir[0])
             {
@@ -1405,26 +1433,28 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
 
           // SGS Fix this up later after things are a bit more stable.   Probably should
           // Use this loop inside the overland flow eval as it is more efficient.
-#if 1
-          if (diffusive == 0)
-          {
-            /* Call overlandflow_eval to compute fluxes across the east, west, north, and south faces */
-            PFModuleInvokeType(OverlandFlowEvalInvoke, overlandflow_module, (grid, is, bc_struct, ipatch, problem_data, pressure,
-                                                                             ke_, kw_, kn_, ks_, qx_, qy_, CALCFCN));
-          }
-          else
-          {
-            /*  @RMM this is modified to be kinematic wave routing, with a new module for diffusive wave
-             * routing added */
-            double *dummy1, *dummy2, *dummy3, *dummy4;
-            PFModuleInvokeType(OverlandFlowEvalDiffInvoke, overlandflow_module_diff, (grid, is, bc_struct, ipatch, problem_data, pressure,
-                                                                                      ke_, kw_, kn_, ks_,
-                                                                                      dummy1, dummy2, dummy3, dummy4,
-                                                                                      qx_, qy_, CALCFCN));
-          }
-#else
+//#if 1
+//          if (diffusive == 0)
+//          {
+//            /* Call overlandflow_eval to compute fluxes across the east, west, north, and south faces */
+//            PFModuleInvokeType(OverlandFlowEvalInvoke, overlandflow_module, (grid, is, bc_struct, ipatch, problem_data, pressure,
+//                                                                             ke_, kw_, kn_, ks_, qx_, qy_, CALCFCN));
+//          }
+//          else
+//          {
+//            /*  @RMM this is modified to be kinematic wave routing, with a new module for diffusive wave
+//             * routing added */
+//            double *dummy1, *dummy2, *dummy3, *dummy4;
+//            PFModuleInvokeType(OverlandFlowEvalDiffInvoke, overlandflow_module_diff, (grid, is, bc_struct, ipatch, problem_data, pressure,
+//                                                                                      ke_, kw_, kn_, ks_,
+//                                                                                      dummy1, dummy2, dummy3, dummy4,
+//                                                                                      qx_, qy_, CALCFCN));
+//          }
+//#else
+
           // SGS TODO can these loops be merged?
-          BCStructPatchLoopOvrlnd(i, j, k, fdir, ival, bc_struct, ipatch, is,
+         BCStructPatchLoopOvrlnd(i, j, k, fdir, ival, bc_struct, ipatch, is,
+//            BCStructPatchLoop(i, j, k, fdir, ival, bc_struct, ipatch, is,
           {
             if (fdir[2])
             {
@@ -1434,20 +1464,114 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
                   io = SubvectorEltIndex(qx_sub, i, j, 0);
                   ip = SubvectorEltIndex(p_sub, i, j, k);
 
-                  double dir_x = 0.0;
-                  double dir_y = 0.0;
-                  if (x_sl_dat[io] > 0.0)
-                    dir_x = -1.0;
-                  if (y_sl_dat[io] > 0.0)
-                    dir_y = -1.0;
-                  if (x_sl_dat[io] < 0.0)
-                    dir_x = 1.0;
-                  if (y_sl_dat[io] < 0.0)
-                    dir_y = 1.0;
+// old way
+//double dir_x = 0.0;
+//double dir_y = 0.0;
+//if (x_sl_dat[io] > 0.0)
+//  dir_x = -1.0;
+//if (y_sl_dat[io] > 0.0)
+//  dir_y = -1.0;
+//if (x_sl_dat[io] < 0.0)
+//  dir_x = 1.0;
+//if (y_sl_dat[io] < 0.0)
+//  dir_y = 1.0;
 
-                  qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+/*                  qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));  */
 
-                  qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+
+                  double Pup = pfmax(pp[ip+1],0.0);
+                  double Pdown = pfmax(pp[ip],0.0);
+
+                  Sf_x = x_sl_dat[io] +(Pup - Pdown)/dx;
+
+                  // upper X boundary, only KWE
+                  if (x_sl_dat[io+1] == 0.0)
+                  Sf_x = x_sl_dat[io];
+
+                   Pup = pfmax(pp[ip+sy_p],0.0);
+                  //double Pdown = pfmax(pp[ip],0.0);
+                  Sf_y = y_sl_dat[io] +(Pup - Pdown)/dy;
+                //  double SF_mag = RPowerR(Sf_x*Sf_x+Sf_y*Sf_y,0.5)
+                  // upper X boundary, only KWE
+                  if (y_sl_dat[io+sy_p] == 0.0)
+                  Sf_y = y_sl_dat[io];
+
+//                  double dir_x = 0.0;
+//                  double dir_y = 0.0;
+                  double ov_epsilon= 1.0e-5;
+//                  if (Sf_x > ov_epsilon)
+//                    dir_x = -1.0;
+//                  if (Sf_y > ov_epsilon)
+//                    dir_y = -1.0;
+//                  if (Sf_x < ov_epsilon)
+//                    dir_x = 1.0;
+//                  if (Sf_y < ov_epsilon)
+//                    dir_y = 1.0;
+
+// calculated Sf_magnitude based on last timestep's pressures
+
+double Pupo = pfmax(opp[ip+1],0.0);
+double Pdowno = pfmax(opp[ip],0.0);
+double Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
+ Pupo = pfmax(opp[ip+sy_p],0.0);
+double Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
+                  double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
+                  if (Sf_mag < ov_epsilon)
+                        Sf_mag = ov_epsilon;
+//                  Press_x = RPMean(dir_x, 0.0, pfmax((pp[ip]), 0.0),
+//                           pfmax((pp[ip+1]), 0.0));
+//                  Press_y = RPMean(dir_y, 0.0, pfmax((pp[ip]), 0.0),
+//                          pfmax((pp[ip+sy_p]), 0.0));
+
+                          Press_x = RPMean(-Sf_x, 0.0, pfmax((pp[ip]), 0.0),
+                                   pfmax((pp[ip+1]), 0.0));
+                          Press_y = RPMean(-Sf_y, 0.0, pfmax((pp[ip]), 0.0),
+                                  pfmax((pp[ip+sy_p]), 0.0));
+
+//      qx_[io] =  -(Sf_x /mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+//      qy_[io] = -(Sf_y /mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+
+      qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+      qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+
+//      qx_[io] = dir_x* (RPowerR(fabs(Sf_x), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+//      qy_[io] = dir_y* (RPowerR(fabs(Sf_y), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+
+      // Check if boundary on X
+      // assumes that loop will only happen on cells where slope is nonzero
+      // and sets BC for slopes that point out
+      if (x_sl_dat[io-1] == 0.0) {
+      if (x_sl_dat[io] > 0.0) {
+        Press_x = pfmax((pp[ip]), 0.0);
+      qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+      }
+    }
+
+  //  if (x_sl_dat[io+1] == 0.0) {
+  //  if (x_sl_dat[io] < 0.0) {
+  //    Press_x = pfmax((pp[ip]), 0.0);
+  //  qx_[io] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+//    }
+//  }
+      // Check if boundary on Y
+      // assumes that loop will only happen on cells where slope is nonzero
+      // and sets BC for slopes that point out
+      if (y_sl_dat[io-sy_p] == 0.0) {
+      if (y_sl_dat[io] > 0.0) {
+        Press_y = pfmax((pp[ip]), 0.0);
+      qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+      }
+    }
+//
+//    if (y_sl_dat[io+sy_p] == 0.0) {
+//    if (y_sl_dat[io] < 0.0) {
+//      Press_y = pfmax((pp[ip]), 0.0);
+//    qy_[io] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+//    }
+//  }
+// @RMM print statements to diagnose looping
+//printf("i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f Pup=%f Pdown=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io], Pup, Pdown );
 
                   break;
               }
@@ -1463,17 +1587,27 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
                 case 1:
                   io = SubvectorEltIndex(ke_sub, i, j, 0);
 
-                  ke_[io] = pfmax(qx_[io], 0.0) - pfmax(-qx_[io + 1], 0.0);
-                  kw_[io] = pfmax(qx_[io - 1], 0.0) - pfmax(-qx_[io], 0.0);
+//                  ke_[io] = pfmax(qx_[io], 0.0) - pfmax(-qx_[io + 1], 0.0);
+  //                kw_[io] = pfmax(qx_[io - 1], 0.0) - pfmax(-qx_[io], 0.0);
 
-                  kn_[io] = pfmax(qy_[io], 0.0) - pfmax(-qy_[io + sy_p], 0.0);
-                  ks_[io] = pfmax(qy_[io - sy_p], 0.0) - pfmax(-qy_[io], 0.0);
+//                  kn_[io] = pfmax(qy_[io], 0.0) - pfmax(-qy_[io + sy_p], 0.0);
+//                  ks_[io] = pfmax(qy_[io - sy_p], 0.0) - pfmax(-qy_[io], 0.0);
+
+                  ke_[io] = qx_[io];
+                  kw_[io] = qx_[io-1];
+
+                  kn_[io] = qy_[io];
+                  ks_[io] = qy_[io-sy_p];
+
+                  // @RMM print statements to diagnose looping
+//                  printf("i=%d j=%d k=%d Ke=%f Kw=%f Kn=%f Ks=%f \n",i,j,k, ke_[io], kw_[io], kn_[io], ks_[io] );
+
 
                   break;
               }
             }
           });
-#endif
+//#endif
 
 
 
@@ -1732,6 +1866,3 @@ int  NlFunctionEvalSizeOfTempData()
 {
   return 0;
 }
-
-
-
