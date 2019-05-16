@@ -202,6 +202,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   int sy_p, sz_p;
   int ip, ipo, io;
   int diffusive;             //@RMM
+  in upwind;   //@RMM
 
   double dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
   double u_right, u_front, u_upper;
@@ -232,6 +233,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
    * re-done putting keys in BC Pressure Package and adding to the
    * datastructure for overlandflowBC */
   diffusive = GetIntDefault("OverlandFlowDiffusive", 0);
+  upwind = GetIntDefault("OverlandFlowUpwind", 0);
 
   int overlandspinup;              //@RMM
   overlandspinup = GetIntDefault("OverlandFlowSpinUp", 0);
