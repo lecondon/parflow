@@ -881,14 +881,33 @@ y_dir_g_c = 1.0;
             del_x_slope = 1.0;
             del_y_slope = 1.0;
 
+//@RMM BC check, tfgupwind == 0 (default) should give original behavior
+// tfgupwind -1 should use original TFG formulation but change BCs
+// tfgupwind 1 should still use sine but upwind
+// tfgupwdin 2 just upwind
+if (tfgupwind == -1)  {
             // direct upwinding, no averaging, I think this is the correct
             // slope to grab
-//            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
-//            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
-//            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
-//            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+}
+if (tfgupwind == 1)  {
+// direct upwinding, no averaging with sines
+x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
+x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
+y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
+y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+}
 
-
+if (tfgupwind == 2)  {
+// direct upwinding, no averaging no sines
+x_dir_g =  x_ssl_dat[io];
+x_dir_g_c = 1.0;
+y_dir_g = y_ssl_dat[io];
+y_dir_g_c = 1.0;
+}
             /* Don't currently do upstream weighting on boundaries */
 
             if (fdir[0])
@@ -1106,12 +1125,33 @@ y_dir_g_c = 1.0;
             del_x_slope = 1.0;
             del_y_slope = 1.0;
 
-            // direct upwinding, no averaging, I think this is the correct
-            // slope to grab
-//            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
-//            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
-//            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
-//            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+            //@RMM BC check, tfgupwind == 0 (default) should give original behavior
+            // tfgupwind -1 should use original TFG formulation but change BCs
+            // tfgupwind 1 should still use sine but upwind
+            // tfgupwdin 2 just upwind
+            if (tfgupwind == -1)  {
+                        // direct upwinding, no averaging, I think this is the correct
+                        // slope to grab
+                        x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+                        x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+                        y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+                        y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+            }
+            if (tfgupwind == 1)  {
+            // direct upwinding, no averaging with sines
+            x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
+            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
+            y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
+            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+            }
+
+            if (tfgupwind == 2)  {
+            // direct upwinding, no averaging no sines
+            x_dir_g =  x_ssl_dat[io];
+            x_dir_g_c = 1.0;
+            y_dir_g = y_ssl_dat[io];
+            y_dir_g_c = 1.0;
+            }
 
             if (fdir[0])
             {
