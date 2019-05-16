@@ -883,10 +883,10 @@ y_dir_g_c = 1.0;
 
             // direct upwinding, no averaging, I think this is the correct
             // slope to grab
-            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
-            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
-            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
-            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+//            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+//            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+//            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+//            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 
 
             /* Don't currently do upstream weighting on boundaries */
@@ -1105,12 +1105,13 @@ y_dir_g_c = 1.0;
 
             del_x_slope = 1.0;
             del_y_slope = 1.0;
+
             // direct upwinding, no averaging, I think this is the correct
             // slope to grab
-            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
-            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
-            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
-            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+//            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+//            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+//            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+//            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 
             if (fdir[0])
             {
