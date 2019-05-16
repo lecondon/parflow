@@ -152,7 +152,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   double      *x_sl_dat, *y_sl_dat, *mann_dat;
   double      *obf_dat;
   double q_overlnd;
-  double Press_x, Press_y, Sf_x, Sf_y;
+  double Press_x, Press_y, Sf_x, Sf_y, Sf_xo, Sf_yo;
   double sep;          // scaling difference temp var @RMM
 
   Vector      *porosity = ProblemDataPorosity(problem_data);
@@ -202,7 +202,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   int sy_p, sz_p;
   int ip, ipo, io;
   int diffusive;             //@RMM
-  in upwind;   //@RMM
+  int upwind;   //@RMM
 
   double dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
   double u_right, u_front, u_upper;
@@ -1484,17 +1484,23 @@ qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pf
 
                   double Pup = pfmax(pp[ip+1],0.0);
                   double Pdown = pfmax(pp[ip],0.0);
-
+                  if (diffusive == 0)
+                   {
+                     Sf_x = x_sl_dat[io];
+                     Sf_y = y_sl_dat[io];
+                   }
+                   else
+                   {
                   Sf_x = x_sl_dat[io] +(Pup - Pdown)/dx;
-
-                  // upper X boundary, only KWE
-                  if (x_sl_dat[io+1] == 0.0)
-                  Sf_x = x_sl_dat[io];
-
                    Pup = pfmax(pp[ip+sy_p],0.0);
                   //double Pdown = pfmax(pp[ip],0.0);
                   Sf_y = y_sl_dat[io] +(Pup - Pdown)/dy;
+                }
                 //  double SF_mag = RPowerR(Sf_x*Sf_x+Sf_y*Sf_y,0.5)
+
+                // upper X boundary, only KWE
+                if (x_sl_dat[io+1] == 0.0)
+                Sf_x = x_sl_dat[io];
                   // upper X boundary, only KWE
                   if (y_sl_dat[io+sy_p] == 0.0)
                   Sf_y = y_sl_dat[io];
@@ -1515,9 +1521,18 @@ qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pf
 
 double Pupo = pfmax(opp[ip+1],0.0);
 double Pdowno = pfmax(opp[ip],0.0);
-double Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
+
+         if (diffusive == 0)
+          {
+           Sf_xo = x_sl_dat[io];
+            Sf_yo = y_sl_dat[io];
+          }
+          else
+          {
+Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
  Pupo = pfmax(opp[ip+sy_p],0.0);
-double Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
+Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
+           }
                   double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
                   if (Sf_mag < ov_epsilon)
                         Sf_mag = ov_epsilon;
