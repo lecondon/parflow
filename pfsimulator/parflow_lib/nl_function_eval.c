@@ -203,6 +203,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   int ip, ipo, io;
   int diffusive;             //@RMM
   int upwind;   //@RMM
+  int tfgupwind;   //@RMM
 
   double dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
   double u_right, u_front, u_upper;
@@ -234,6 +235,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
    * datastructure for overlandflowBC */
   diffusive = GetIntDefault("OverlandFlowDiffusive", 0);
   upwind = GetIntDefault("OverlandFlowUpwind", 0);
+  tfgupwind = GetIntDefault("TFGUpwind", 0);
 
   int overlandspinup;              //@RMM
   overlandspinup = GetIntDefault("OverlandFlowSpinUp", 0);
@@ -649,20 +651,21 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
       y_dir_g = Mean(gravity * sin(atan(y_ssl_dat[io])), gravity * sin(atan(y_ssl_dat[io + sy_p])));
       y_dir_g_c = Mean(gravity * cos(atan(y_ssl_dat[io])), gravity * cos(atan(y_ssl_dat[io + sy_p])));
 
-
+if (tfgupwind == 1)  {
 // direct upwinding, no averaging with sines
 x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
 x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
 y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
 y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+}
 
-
+if (tfgupwind == 2)  {
 // direct upwinding, no averaging no sines
 x_dir_g =  x_ssl_dat[io];
 x_dir_g_c = 1.0;
 y_dir_g = y_ssl_dat[io];
 y_dir_g_c = 1.0;
-
+}
       z_dir_g = 1.0;
 
       del_x_slope = 1.0;
@@ -1583,7 +1586,7 @@ Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
       }
     }
 
-  }  // end of upwind check 
+  }  // end of upwind check
 //
 //    if (y_sl_dat[io+sy_p] == 0.0) {
 //    if (y_sl_dat[io] < 0.0) {
