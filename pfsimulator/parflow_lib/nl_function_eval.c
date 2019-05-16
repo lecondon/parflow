@@ -1466,22 +1466,24 @@ y_dir_g_c = 1.0;
                   io = SubvectorEltIndex(qx_sub, i, j, 0);
                   ip = SubvectorEltIndex(p_sub, i, j, k);
 
+if (upwind == 0) {
 // old way
-//double dir_x = 0.0;
-//double dir_y = 0.0;
-//if (x_sl_dat[io] > 0.0)
-//  dir_x = -1.0;
-//if (y_sl_dat[io] > 0.0)
-//  dir_y = -1.0;
-//if (x_sl_dat[io] < 0.0)
-//  dir_x = 1.0;
-//if (y_sl_dat[io] < 0.0)
-//  dir_y = 1.0;
+double dir_x = 0.0;
+double dir_y = 0.0;
+if (x_sl_dat[io] > 0.0)
+  dir_x = -1.0;
+if (y_sl_dat[io] > 0.0)
+  dir_y = -1.0;
+if (x_sl_dat[io] < 0.0)
+  dir_x = 1.0;
+if (y_sl_dat[io] < 0.0)
+  dir_y = 1.0;
 
-/*                  qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
-qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));  */
+qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
 
-
+} else {
+// new way
                   double Pup = pfmax(pp[ip+1],0.0);
                   double Pdown = pfmax(pp[ip],0.0);
                   if (diffusive == 0)
@@ -1580,6 +1582,8 @@ Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
       qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
       }
     }
+
+  }  // end of upwind check 
 //
 //    if (y_sl_dat[io+sy_p] == 0.0) {
 //    if (y_sl_dat[io] < 0.0) {
@@ -1604,18 +1608,22 @@ Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
                 case 1:
                   io = SubvectorEltIndex(ke_sub, i, j, 0);
 
-//                  ke_[io] = pfmax(qx_[io], 0.0) - pfmax(-qx_[io + 1], 0.0);
-  //                kw_[io] = pfmax(qx_[io - 1], 0.0) - pfmax(-qx_[io], 0.0);
 
-//                  kn_[io] = pfmax(qy_[io], 0.0) - pfmax(-qy_[io + sy_p], 0.0);
-//                  ks_[io] = pfmax(qy_[io - sy_p], 0.0) - pfmax(-qy_[io], 0.0);
+if (upwind == 0) {
+  // original way ala Kollet and Maxwell (2006)
+                  ke_[io] = pfmax(qx_[io], 0.0) - pfmax(-qx_[io + 1], 0.0);
+                  kw_[io] = pfmax(qx_[io - 1], 0.0) - pfmax(-qx_[io], 0.0);
 
+                  kn_[io] = pfmax(qy_[io], 0.0) - pfmax(-qy_[io + sy_p], 0.0);
+                  ks_[io] = pfmax(qy_[io - sy_p], 0.0) - pfmax(-qy_[io], 0.0);
+}  else {
+  // new upwind
                   ke_[io] = qx_[io];
                   kw_[io] = qx_[io-1];
 
                   kn_[io] = qy_[io];
                   ks_[io] = qy_[io-sy_p];
-
+}
                   // @RMM print statements to diagnose looping
 //                  printf("i=%d j=%d k=%d Ke=%f Kw=%f Kn=%f Ks=%f \n",i,j,k, ke_[io], kw_[io], kn_[io], ks_[io] );
 
