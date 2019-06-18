@@ -653,10 +653,10 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
 
 if (tfgupwind == 1)  {
 // direct upwinding, no averaging with sines
-x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
-x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
-y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
-y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 }
 
 if (tfgupwind == 2)  {
@@ -888,17 +888,18 @@ y_dir_g_c = 1.0;
 if (tfgupwind == -1)  {
             // direct upwinding, no averaging, I think this is the correct
             // slope to grab
-            x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
-            x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
-            y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
-            y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
+            x_dir_g = Mean(gravity * sin(atan(x_ssl_dat[io])), gravity * sin(atan(x_ssl_dat[io + 1])));
+            x_dir_g_c = Mean(gravity * cos(atan(x_ssl_dat[io])), gravity * cos(atan(x_ssl_dat[io + 1])));
+            y_dir_g = Mean(gravity * sin(atan(y_ssl_dat[io])), gravity * sin(atan(y_ssl_dat[io + sy_p])));
+            y_dir_g_c = Mean(gravity * cos(atan(y_ssl_dat[io])), gravity * cos(atan(y_ssl_dat[io + sy_p])));
+
 }
 if (tfgupwind == 1)  {
 // direct upwinding, no averaging with sines
-x_dir_g =  gravity * sin(atan(x_ssl_dat[io + 1]));
-x_dir_g_c = gravity * cos(atan(x_ssl_dat[io + 1]));
-y_dir_g = gravity * sin(atan(y_ssl_dat[io + sy_p]));
-y_dir_g_c = gravity * cos(atan(y_ssl_dat[io + sy_p]));
+x_dir_g =  gravity * sin(atan(x_ssl_dat[io]));
+x_dir_g_c = gravity * cos(atan(x_ssl_dat[io]));
+y_dir_g = gravity * sin(atan(y_ssl_dat[io]));
+y_dir_g_c = gravity * cos(atan(y_ssl_dat[io]));
 }
 
 if (tfgupwind == 2)  {
