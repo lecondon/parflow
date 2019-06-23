@@ -1511,135 +1511,148 @@ y_dir_g_c = 1.0;
                   io = SubvectorEltIndex(qx_sub, i, j, 0);
                   ip = SubvectorEltIndex(p_sub, i, j, k);
 
-if (upwind == 0) {
-// old way
-double dir_x = 0.0;
-double dir_y = 0.0;
-if (x_sl_dat[io] > 0.0)
-  dir_x = -1.0;
-if (y_sl_dat[io] > 0.0)
-  dir_y = -1.0;
-if (x_sl_dat[io] < 0.0)
-  dir_x = 1.0;
-if (y_sl_dat[io] < 0.0)
-  dir_y = 1.0;
+                  if (upwind == 0) {
+                    // old way
+                    double dir_x = 0.0;
+                    double dir_y = 0.0;
+                    if (x_sl_dat[io] > 0.0)
+                    dir_x = -1.0;
+                    if (y_sl_dat[io] > 0.0)
+                    dir_y = -1.0;
+                    if (x_sl_dat[io] < 0.0)
+                    dir_x = 1.0;
+                    if (y_sl_dat[io] < 0.0)
+                    dir_y = 1.0;
 
-qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
-qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                    qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                    qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
 
-} else {
-// new way
-                  double Pup = pfmax(pp[ip+1],0.0);
-                  double Pdown = pfmax(pp[ip],0.0);
-                  if (diffusive == 0)
-                   {
-                     Sf_x = x_sl_dat[io];
-                     Sf_y = y_sl_dat[io];
-                   }
-                   else
-                   {
-                  Sf_x = x_sl_dat[io] +(Pup - Pdown)/dx;
-                   Pup = pfmax(pp[ip+sy_p],0.0);
-                  //double Pdown = pfmax(pp[ip],0.0);
-                  Sf_y = y_sl_dat[io] +(Pup - Pdown)/dy;
-                }
-                //  double SF_mag = RPowerR(Sf_x*Sf_x+Sf_y*Sf_y,0.5)
+                  } else {
+                    // new way
+                    double Pup = pfmax(pp[ip+1],0.0);
+                    double Pdown = pfmax(pp[ip],0.0);
+                    double Pupo = pfmax(opp[ip+1],0.0);
+                    double Pdowno = pfmax(opp[ip],0.0);
+                    if (diffusive == 0)
+                    {
+                      Sf_x = x_sl_dat[io];
+                      Sf_y = y_sl_dat[io];
+                      Sf_xo = x_sl_dat[io];
+                      Sf_yo = y_sl_dat[io];
+                    }
+                    else
+                    {
+                      Sf_x = x_sl_dat[io] +(Pup - Pdown)/dx;
+                      Pup = pfmax(pp[ip+sy_p],0.0);
+                      //double Pdown = pfmax(pp[ip],0.0);
+                      Sf_y = y_sl_dat[io] +(Pup - Pdown)/dy;
 
-                // upper X boundary, only KWE
-                if (x_sl_dat[io+1] == 0.0)
-                Sf_x = x_sl_dat[io];
-                  // upper X boundary, only KWE
-                  if (y_sl_dat[io+sy_p] == 0.0)
-                  Sf_y = y_sl_dat[io];
+                      Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
+                      Pupo = pfmax(opp[ip+sy_p],0.0);
+                      Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
+                    }
+                    //  double SF_mag = RPowerR(Sf_x*Sf_x+Sf_y*Sf_y,0.5)
 
-//                  double dir_x = 0.0;
-//                  double dir_y = 0.0;
-                  double ov_epsilon= 1.0e-5;
-//                  if (Sf_x > ov_epsilon)
-//                    dir_x = -1.0;
-//                  if (Sf_y > ov_epsilon)
-//                    dir_y = -1.0;
-//                  if (Sf_x < ov_epsilon)
-//                    dir_x = 1.0;
-//                  if (Sf_y < ov_epsilon)
-//                    dir_y = 1.0;
+                    // upper X boundary, only KWE
+                    //if (x_sl_dat[io+1] == 0.0)
+                    //Sf_x = x_sl_dat[io];
+                    // upper X boundary, only KWE
+                    //if (y_sl_dat[io+sy_p] == 0.0)
+                    //Sf_y = y_sl_dat[io];
 
-// calculated Sf_magnitude based on last timestep's pressures
+                    //                  double dir_x = 0.0;
+                    //                  double dir_y = 0.0;
+                    double ov_epsilon= 1.0e-5;
+                    //                  if (Sf_x > ov_epsilon)
+                    //                    dir_x = -1.0;
+                    //                  if (Sf_y > ov_epsilon)
+                    //                    dir_y = -1.0;
+                    //                  if (Sf_x < ov_epsilon)
+                    //                    dir_x = 1.0;
+                    //                  if (Sf_y < ov_epsilon)
+                    //                    dir_y = 1.0;
 
-double Pupo = pfmax(opp[ip+1],0.0);
-double Pdowno = pfmax(opp[ip],0.0);
+                    // calculated Sf_magnitude based on last timestep's pressures
 
-         if (diffusive == 0)
-          {
-           Sf_xo = x_sl_dat[io];
-            Sf_yo = y_sl_dat[io];
-          }
-          else
-          {
-Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
- Pupo = pfmax(opp[ip+sy_p],0.0);
-Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
-           }
-                  double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
-                  if (Sf_mag < ov_epsilon)
-                        Sf_mag = ov_epsilon;
-//                  Press_x = RPMean(dir_x, 0.0, pfmax((pp[ip]), 0.0),
-//                           pfmax((pp[ip+1]), 0.0));
-//                  Press_y = RPMean(dir_y, 0.0, pfmax((pp[ip]), 0.0),
-//                          pfmax((pp[ip+sy_p]), 0.0));
+                    //double Pupo = pfmax(opp[ip+1],0.0);
+                    //double Pdowno = pfmax(opp[ip],0.0);
 
-                          Press_x = RPMean(-Sf_x, 0.0, pfmax((pp[ip]), 0.0),
-                                   pfmax((pp[ip+1]), 0.0));
-                          Press_y = RPMean(-Sf_y, 0.0, pfmax((pp[ip]), 0.0),
-                                  pfmax((pp[ip+sy_p]), 0.0));
+                    //if (diffusive == 0)
+                    //{
+                    //  Sf_xo = x_sl_dat[io];
+                    //  Sf_yo = y_sl_dat[io];
+                    //  }
+                    //else
+                    //{
+                    //  Sf_xo = x_sl_dat[io] +(Pupo - Pdowno)/dx;
+                    //  Pupo = pfmax(opp[ip+sy_p],0.0);
+                    //  Sf_yo = y_sl_dat[io] +(Pupo - Pdowno)/dy;
+                    //}
+                    double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
+                    if (Sf_mag < ov_epsilon)
+                    Sf_mag = ov_epsilon;
+                    //                  Press_x = RPMean(dir_x, 0.0, pfmax((pp[ip]), 0.0),
+                    //                           pfmax((pp[ip+1]), 0.0));
+                    //                  Press_y = RPMean(dir_y, 0.0, pfmax((pp[ip]), 0.0),
+                    //                          pfmax((pp[ip+sy_p]), 0.0));
 
-//      qx_[io] =  -(Sf_x /mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-//      qy_[io] = -(Sf_y /mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                    Press_x = RPMean(-Sf_x, 0.0, pfmax((pp[ip]), 0.0), pfmax((pp[ip+1]), 0.0));
+                    Press_y = RPMean(-Sf_y, 0.0, pfmax((pp[ip]), 0.0),pfmax((pp[ip+sy_p]), 0.0));
 
-      qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-      qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
 
-//      qx_[io] = dir_x* (RPowerR(fabs(Sf_x), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-//      qy_[io] = dir_y* (RPowerR(fabs(Sf_y), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                    //      qx_[io] =  -(Sf_x /mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+                    //      qy_[io] = -(Sf_y /mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
 
-      // Check if boundary on X
-      // assumes that loop will only happen on cells where slope is nonzero
-      // and sets BC for slopes that point out
-      if (x_sl_dat[io-1] == 0.0) {
-      if (x_sl_dat[io] > 0.0) {
-        Press_x = pfmax((pp[ip]), 0.0);
-      qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-      }
-    }
 
-  //  if (x_sl_dat[io+1] == 0.0) {
-  //  if (x_sl_dat[io] < 0.0) {
-  //    Press_x = pfmax((pp[ip]), 0.0);
-  //  qx_[io] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-//    }
-//  }
-      // Check if boundary on Y
-      // assumes that loop will only happen on cells where slope is nonzero
-      // and sets BC for slopes that point out
-      if (y_sl_dat[io-sy_p] == 0.0) {
-      if (y_sl_dat[io] > 0.0) {
-        Press_y = pfmax((pp[ip]), 0.0);
-      qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
-      }
-    }
+                    qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                    qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
 
-  }  // end of upwind check
-//
-//    if (y_sl_dat[io+sy_p] == 0.0) {
-//    if (y_sl_dat[io] < 0.0) {
-//      Press_y = pfmax((pp[ip]), 0.0);
-//    qy_[io] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
-//    }
-//  }
-// @RMM print statements to diagnose looping
-//printf("i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f Pup=%f Pdown=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io], Pup, Pdown );
+                    //      qx_[io] = dir_x* (RPowerR(fabs(Sf_x), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+                    //      qy_[io] = dir_y* (RPowerR(fabs(Sf_y), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
 
-                  break;
+                    // Check if boundary on X
+                    // assumes that loop will only happen on cells where slope is nonzero
+                    // and sets BC for slopes that point out
+                    if (x_sl_dat[io-1] == 0.0) {
+                      if (x_sl_dat[io] > 0.0) {
+                        Press_x = pfmax((pp[ip]), 0.0);
+                        //qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+                        qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                      }
+                    }
+
+                    if (x_sl_dat[io+1] == 0.0) {
+                      if (x_sl_dat[io] < 0.0) {
+                        Press_x = pfmax((pp[ip]), 0.0);
+                        //qx_[io] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+                        qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                      }
+                    }
+                    // Check if boundary on Y
+                    // assumes that loop will only happen on cells where slope is nonzero
+                    // and sets BC for slopes that point out
+                    if (y_sl_dat[io-sy_p] == 0.0) {
+                      if (y_sl_dat[io] > 0.0) {
+                        Press_y = pfmax((pp[ip]), 0.0);
+                        //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                        qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+                      }
+                    }
+
+                    if (y_sl_dat[io+sy_p] == 0.0) {
+                      if (y_sl_dat[io] < 0.0) {
+                        Press_y = pfmax((pp[ip]), 0.0);
+                        //qy_[io] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                        qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+                      }
+                    }
+
+                  }  // end of upwind check
+                  //
+
+                // @RMM print statements to diagnose looping
+                //printf("i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f Pup=%f Pdown=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io], Pup, Pdown );
+                break;
               }
             }
           });
