@@ -1621,13 +1621,13 @@ y_dir_g_c = 1.0;
                       }
                     }
 
-                    if (x_sl_dat[io+1] == 0.0) {
-                      if (x_sl_dat[io] < 0.0) {
-                        Press_x = pfmax((pp[ip]), 0.0);
-                        //qx_[io] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-                        qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                      }
-                    }
+///                    if (x_sl_dat[io+1] == 0.0) {
+///                      if (x_sl_dat[io] < 0.0) {
+///                        Press_x = pfmax((pp[ip]), 0.0);
+///                        //qx_[io] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
+///                        qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+///                      }
+///                    }
                     // Check if boundary on Y
                     // assumes that loop will only happen on cells where slope is nonzero
                     // and sets BC for slopes that point out
@@ -1638,14 +1638,20 @@ y_dir_g_c = 1.0;
                         qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
                       }
                     }
+// @RMM notes, so the upper BC is not needed
+// @RMM but the lower one is.  For DWE we need:
+// 1. Another way to determine boundary cells
+// 2. to extend the Sf and Sfmag calculation along the lower cells in this term
+// that is, Sfmag needs to be calculated for the 
 
-                    if (y_sl_dat[io+sy_p] == 0.0) {
-                      if (y_sl_dat[io] < 0.0) {
-                        Press_y = pfmax((pp[ip]), 0.0);
-                        //qy_[io] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
-                        qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
-                      }
-                    }
+
+///                    if (y_sl_dat[io+sy_p] == 0.0) {
+///                      if (y_sl_dat[io] < 0.0) {
+///                        Press_y = pfmax((pp[ip]), 0.0);
+///                        //qy_[io] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+///                        qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+///                      }
+///                    }
 
                   }  // end of upwind check
                   //
