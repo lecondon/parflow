@@ -1642,7 +1642,7 @@ y_dir_g_c = 1.0;
 // @RMM but the lower one is.  For DWE we need:
 // 1. Another way to determine boundary cells
 // 2. to extend the Sf and Sfmag calculation along the lower cells in this term
-// that is, Sfmag needs to be calculated for the 
+// that is, Sf and Sfmag need to be calculated for the press(i=0) and 0 gradient (the i=-1 location)
 
 
 ///                    if (y_sl_dat[io+sy_p] == 0.0) {
