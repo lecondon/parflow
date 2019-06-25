@@ -204,6 +204,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   int diffusive;             //@RMM
   int upwind;   //@RMM
   int tfgupwind;   //@RMM
+  int sfmagform; //@LEC
 
   double dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
   double u_right, u_front, u_upper;
@@ -236,6 +237,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   diffusive = GetIntDefault("OverlandFlowDiffusive", 0);
   upwind = GetIntDefault("OverlandFlowUpwind", 0);
   tfgupwind = GetIntDefault("TFGUpwind", 0);
+  sfmagform = GetIntDefault("SFmagFormulation", 0);
 
   int overlandspinup;              //@RMM
   overlandspinup = GetIntDefault("OverlandFlowSpinUp", 0);
@@ -1512,20 +1514,34 @@ y_dir_g_c = 1.0;
                   ip = SubvectorEltIndex(p_sub, i, j, k);
 
                   if (upwind == 0) {
-                    // old way
-                    double dir_x = 0.0;
-                    double dir_y = 0.0;
-                    if (x_sl_dat[io] > 0.0)
-                    dir_x = -1.0;
-                    if (y_sl_dat[io] > 0.0)
-                    dir_y = -1.0;
-                    if (x_sl_dat[io] < 0.0)
-                    dir_x = 1.0;
-                    if (y_sl_dat[io] < 0.0)
-                    dir_y = 1.0;
+                    // This is the original formulation
+                    if (sfmagform ==0) {
+                      // old way
+                      double dir_x = 0.0;
+                      double dir_y = 0.0;
+                      if (x_sl_dat[io] > 0.0)
+                      dir_x = -1.0;
+                      if (y_sl_dat[io] > 0.0)
+                      dir_y = -1.0;
+                      if (x_sl_dat[io] < 0.0)
+                      dir_x = 1.0;
+                      if (y_sl_dat[io] < 0.0)
+                      dir_y = 1.0;
 
-                    qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
-                    qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                      qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                      qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+
+                      /// temporary addition of sf_mag formulation to match more closely with new formulation
+                    } else {
+                      Sf_x = x_sl_dat[io];
+                      Sf_y = y_sl_dat[io];
+                      double Sf_mag = RPowerR(Sf_x*Sf_x+Sf_y*Sf_y,0.5); //+ov_epsilon;
+                      double ov_epsilon= 1.0e-5;
+                      if (Sf_mag < ov_epsilon)
+                      Sf_mag = ov_epsilon;
+                      qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                      qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                    }
 
                   } else {
                     // new way
@@ -1618,6 +1634,7 @@ y_dir_g_c = 1.0;
                         Press_x = pfmax((pp[ip]), 0.0);
                         //qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
                         qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                        //printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                       }
                     }
 
@@ -1636,6 +1653,7 @@ y_dir_g_c = 1.0;
                         Press_y = pfmax((pp[ip]), 0.0);
                         //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                         qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+                        //printf("HERE lowerY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                       }
                     }
 // @RMM notes, so the upper BC is not needed
@@ -1643,7 +1661,6 @@ y_dir_g_c = 1.0;
 // 1. Another way to determine boundary cells
 // 2. to extend the Sf and Sfmag calculation along the lower cells in this term
 // that is, Sf and Sfmag need to be calculated for the press(i=0) and 0 gradient (the i=-1 location)
-
 
 ///                    if (y_sl_dat[io+sy_p] == 0.0) {
 ///                      if (y_sl_dat[io] < 0.0) {
@@ -1657,6 +1674,7 @@ y_dir_g_c = 1.0;
                   //
 
                 // @RMM print statements to diagnose looping
+                //printf("i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                 //printf("i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f Pup=%f Pdown=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io], Pup, Pdown );
                 break;
               }
