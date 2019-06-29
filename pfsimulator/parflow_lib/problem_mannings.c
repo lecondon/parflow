@@ -103,7 +103,7 @@ void Mannings(ProblemData *problem_data, Vector *mann, Vector *dummy)
    * Put in any user defined mannings
    *-----------------------------------------------------------------------*/
 
-  InitVectorAll(mann, 1.0);
+  InitVectorAll(mann, 0.0);
 
   switch ((public_xtra->type))
   {
