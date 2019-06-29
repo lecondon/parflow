@@ -1530,6 +1530,7 @@ y_dir_g_c = 1.0;
 
                       qx_[io] = dir_x * (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
                       qy_[io] = dir_y * (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                      printf("HERE sfmagform1 i=%d j=%d k=%d Sf_x=%f Sf_y=%f Press=%f qx=%f qy=%f man=%f\n",i,j,k, Sf_x, Sf_y,  pp[ip], qx_[io], qy_[io],mann_dat[io]);
 
                       /// temporary addition of sf_mag formulation to match more closely with new formulation
                     } else {
@@ -1541,6 +1542,8 @@ y_dir_g_c = 1.0;
                       Sf_mag = ov_epsilon;
                       qx_[io] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
                       qy_[io] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(pfmax((pp[ip]), 0.0), (5.0 / 3.0));
+                      printf("HERE sfmagform1 i=%d j=%d k=%d Sf_x=%f Sf_y=%f Sfmag=%f Press=%f qx=%f qy=%f man=%f\n",i,j,k, Sf_x, Sf_y, Sf_mag, pp[ip], qx_[io], qy_[io],mann_dat[io]);
+
                     }
 
                   } else {
@@ -1651,7 +1654,7 @@ y_dir_g_c = 1.0;
                         if (Sf_x > 0.0) {
                           //qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
                           qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                          //printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                          printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
 
                         }
                       }
@@ -1688,7 +1691,7 @@ y_dir_g_c = 1.0;
                         if (Sf_y > 0.0) {
                           //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                           qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
-                          //printf("HERE lowerY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                          printf("HERE lowerY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                        }
                       }
                     }
@@ -1719,13 +1722,13 @@ y_dir_g_c = 1.0;
                       if (Sf_y > 0.0) {
                         //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                         qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
-                        //printf("HERE lowerleftY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                        printf("HERE lowerleftY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                      }
 
                      if (Sf_x > 0.0) {
                        //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                        qx_[io-sy_p] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                       //printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                       printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                     }
                     }
                   }
