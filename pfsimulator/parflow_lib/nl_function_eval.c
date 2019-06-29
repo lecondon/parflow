@@ -1651,7 +1651,7 @@ y_dir_g_c = 1.0;
                         if (Sf_x > 0.0) {
                           //qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
                           qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                          printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                          //printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
 
                         }
                       }
@@ -1688,30 +1688,47 @@ y_dir_g_c = 1.0;
                         if (Sf_y > 0.0) {
                           //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                           qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
-                          printf("HERE lowerY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                          //printf("HERE lowerY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                        }
                       }
                     }
 
-                    /// Adding in a check for lower left corner -- still to do
-                    //if (mann_dat[io-1] + mann_dat[io-sy_p] == 0.0) {
-                    //    Press_x = pfmax((pp[ip]), 0.0);
-                    //    Press_y = pfmax((pp[ip]), 0.0);
-                    //    // do x slope first
-                    //    if (mann_dat[io] * x_sl_dat[io] > 0.0) {
-                    //    if (diffusive == 1) {
-                    //      Sf_x = x_sl_dat[io] +(Press_x - 0.0)/dx;
-                    //      Pupo = pfmax(opp[ip],0.0);
-                    //      Sf_xo = x_sl_dat[io] +(Pupo - 0.0)/dx;
-                    //      double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
-                    //      if (Sf_mag < ov_epsilon)
-                    //      Sf_mag = ov_epsilon;
-                    //    }
-                    //    //qx_[io-1] = -1.0* (RPowerR(fabs(x_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_x, (5.0 / 3.0));
-                    //    qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                    //    printf("HERE lowerX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
-                    //  }
-                    //}
+                    /// Adding in a check for lower left corner
+                    if (mann_dat[io-1] + mann_dat[io-sy_p] == 0.0) {
+                      if (mann_dat[io] > 0.0) {
+                      Press_x = pfmax((pp[ip]), 0.0);
+                      Press_y = pfmax((pp[ip]), 0.0);
+                      //get the slope across the boundary
+                      if (diffusive ==0){
+                        Sf_x = x_sl_dat[io];
+                        Sf_y = y_sl_dat[io];
+                      }
+                      else{
+                        Pupo = pfmax(opp[ip],0.0);
+                        Sf_x = x_sl_dat[io] +(Press_x - 0.0)/dx;
+                        Sf_xo = x_sl_dat[io] +(Pupo - 0.0)/dx;
+
+                        Sf_y = y_sl_dat[io] +(Press_y - 0.0)/dx;
+                        Sf_yo = y_sl_dat[io] +(Pupo - 0.0)/dx;
+
+                        double Sf_mag = RPowerR(Sf_xo*Sf_xo+Sf_yo*Sf_yo,0.5); //+ov_epsilon;
+                        if (Sf_mag < ov_epsilon)
+                        Sf_mag = ov_epsilon;
+                      }
+                      // if slope points out calculate flow for j-1
+                      if (Sf_y > 0.0) {
+                        //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                        qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
+                        //printf("HERE lowerleftY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                     }
+
+                     if (Sf_x > 0.0) {
+                       //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                       qx_[io-sy_p] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                       //printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                    }
+                    }
+                  }
 // @RMM notes, so the upper BC is not needed
 // @RMM but the lower one is.  For DWE we need:
 // 1. Another way to determine boundary cells
