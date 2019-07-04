@@ -205,6 +205,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   int upwind;   //@RMM
   int tfgupwind;   //@RMM
   int sfmagform; //@LEC
+  int usemodule; //@LEC
 
   double dtmp, dx, dy, dz, vol, ffx, ffy, ffz;
   double u_right, u_front, u_upper;
@@ -238,6 +239,7 @@ void NlFunctionEval(Vector *     pressure, /* Current pressure values */
   upwind = GetIntDefault("OverlandFlowUpwind", 0);
   tfgupwind = GetIntDefault("TFGUpwind", 0);
   sfmagform = GetIntDefault("SFmagFormulation", 0);
+  usemodule = GetIntDefault("UseModules", 0);
 
   int overlandspinup;              //@RMM
   overlandspinup = GetIntDefault("OverlandFlowSpinUp", 0);
@@ -1483,24 +1485,27 @@ y_dir_g_c = 1.0;
           // SGS Fix this up later after things are a bit more stable.   Probably should
           // Use this loop inside the overland flow eval as it is more efficient.
 //#if 1
-//          if (diffusive == 0)
-//          {
-//            /* Call overlandflow_eval to compute fluxes across the east, west, north, and south faces */
-//            PFModuleInvokeType(OverlandFlowEvalInvoke, overlandflow_module, (grid, is, bc_struct, ipatch, problem_data, pressure,
-//                                                                             ke_, kw_, kn_, ks_, qx_, qy_, CALCFCN));
-//          }
-//          else
-//          {
-//            /*  @RMM this is modified to be kinematic wave routing, with a new module for diffusive wave
-//             * routing added */
-//            double *dummy1, *dummy2, *dummy3, *dummy4;
-//            PFModuleInvokeType(OverlandFlowEvalDiffInvoke, overlandflow_module_diff, (grid, is, bc_struct, ipatch, problem_data, pressure,
-//                                                                                      ke_, kw_, kn_, ks_,
-//                                                                                      dummy1, dummy2, dummy3, dummy4,
-//                                                                                      qx_, qy_, CALCFCN));
-//          }
-//#else
-
+if (usemodule == 1) {
+          printf ("Using overland flow modules");
+          if (diffusive == 0)
+          {
+            /* Call overlandflow_eval to compute fluxes across the east, west, north, and south faces */
+            PFModuleInvokeType(OverlandFlowEvalInvoke, overlandflow_module, (grid, is, bc_struct, ipatch, problem_data, pressure,
+                                                                             ke_, kw_, kn_, ks_, qx_, qy_, CALCFCN));
+          }
+          else
+          {
+            /*  @RMM this is modified to be kinematic wave routing, with a new module for diffusive wave
+             * routing added */
+            double *dummy1, *dummy2, *dummy3, *dummy4;
+            PFModuleInvokeType(OverlandFlowEvalDiffInvoke, overlandflow_module_diff, (grid, is, bc_struct, ipatch, problem_data, pressure,
+                                                                                      ke_, kw_, kn_, ks_,
+                                                                                      dummy1, dummy2, dummy3, dummy4,
+                                                                                      qx_, qy_, CALCFCN));
+          }
+}
+else
+{
           // SGS TODO can these loops be merged?
          BCStructPatchLoopOvrlnd(i, j, k, fdir, ival, bc_struct, ipatch, is,
 //            BCStructPatchLoop(i, j, k, fdir, ival, bc_struct, ipatch, is,
@@ -1727,6 +1732,7 @@ y_dir_g_c = 1.0;
 
                      if (Sf_x > 0.0) {
                        //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
+                       //I think this should be qx_[io-1]
                        qx_[io-sy_p] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
                        //printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
                     }
@@ -1790,6 +1796,8 @@ if (upwind == 0) {
               }
             }
           });
+
+}
 //#endif
 
 
