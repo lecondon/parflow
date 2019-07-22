@@ -1726,14 +1726,14 @@ else
                       if (Sf_y > 0.0) {
                         //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                         qy_[io-sy_p] = -(Sf_y / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_y, (5.0 / 3.0));
-                        //printf("HERE lowerleftY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                        printf("HERE lowerleftY! i=%d j=%d k=%d Sf_x=%f Sf_y=%f Sf_mag=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, Sf_mag, qx_[io-1], qy_[io-sy_p]);
                      }
 
                      if (Sf_x > 0.0) {
                        //qy_[io-sy_p] = -1.0* (RPowerR(fabs(y_sl_dat[io]), 0.5) / mann_dat[io]) * RPowerR(Press_y, (5.0 / 3.0));
                        //I think this should be qx_[io-1]
-                       qx_[io-sy_p] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
-                       //printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, qx_[io], qy_[io]);
+                       qx_[io-1] = -(Sf_x / (RPowerR(fabs(Sf_mag),0.5)*mann_dat[io])) * RPowerR(Press_x, (5.0 / 3.0));
+                       printf("HERE lowerleftX! i=%d j=%d k=%d Sf_x=%f Sf_y=%f Sf_mag=%f qx=%f qy=%f \n",i,j,k, Sf_x, Sf_y, Sf_mag, qx_[io-1], qy_[io-sy_p]);
                     }
                     }
                   }
